@@ -1,6 +1,7 @@
+import 'package:expanse_planner/new_transaction.dart';
 import 'package:expanse_planner/transaction.dart';
+import 'package:expanse_planner/transaction_list.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,106 +16,77 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Expense Calculator',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.purple,
       ),
       home: MyHomePage(title: 'Expense Calculator'),
     );
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  final List<Transaction> transactions = [
+class MyHomePage extends StatefulWidget {
+  MyHomePage({Key? key, required this.title}) : super(key: key);
+
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  final List<Transaction> _userTransactions = [
     Transaction(id: 't1', title: 'New Shoes', amount: 40, date: DateTime.now()),
     Transaction(
         id: 't2', title: 'Weekly Groceries', amount: 100, date: DateTime.now())
   ];
-  MyHomePage({Key? key, required this.title}) : super(key: key);
 
-  final String title;
-  final titleController = TextEditingController();
-  final amountController = TextEditingController();
+  void _addNewTransaction(String title, double amount) {
+    final newTx = Transaction(
+        id: DateTime.now().toString(),
+        title: title,
+        amount: amount,
+        date: DateTime.now());
+
+    setState(() {
+      _userTransactions.add(newTx);
+    });
+  }
+
+  void _startAddNewTransaction(BuildContext ctx) {
+    showModalBottomSheet(
+        context: ctx,
+        builder: (_) {
+          return NewTransaction(_addNewTransaction);
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+              onPressed: () => _startAddNewTransaction(context),
+              icon: const Icon(Icons.add))
+        ],
       ),
-      body:
-          Column(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
-        Card(
-          color: Colors.blue,
-          child: Container(width: double.infinity, child: const Text('Chart')),
-          elevation: 5,
-        ),
-        Card(
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                ),
-                controller: titleController,
+      body: SingleChildScrollView(
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Card(
+                color: Colors.blue,
+                child: Container(
+                    width: double.infinity, child: const Text('Chart')),
+                elevation: 5,
               ),
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: 'Amount',
-                ),
-                controller: amountController,
-              ),
-              TextButton(
-                onPressed: () => {},
-                child: const Text('Add Transaction'),
-                style: ButtonStyle(
-                    foregroundColor: MaterialStateProperty.all(Colors.purple)),
-              )
+              TransactionList(_userTransactions)
             ]),
-          ),
-        ),
-        Column(
-          children: transactions.map(
-            (e) {
-              return Card(
-                  child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 15),
-                    child: Text(
-                      '\$ ${e.amount}',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: Colors.purple),
-                    ),
-                    decoration: BoxDecoration(
-                        border: Border.all(color: Colors.purple, width: 2)),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        e.title,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                      Text(
-                        DateFormat.yMMMMd().format(e.date),
-                        style: const TextStyle(
-                          color: Colors.grey,
-                        ),
-                      )
-                    ],
-                  )
-                ],
-              ));
-            },
-          ).toList(),
-        )
-      ]),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () => _startAddNewTransaction(context),
+      ),
     );
   }
 }
